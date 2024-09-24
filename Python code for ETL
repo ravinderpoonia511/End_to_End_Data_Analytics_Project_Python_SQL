@@ -1,0 +1,68 @@
+!pip install kaggle
+
+#first we create token on kaggle to get kaggle jason and this file must be store on c drive within .kaggle folder
+import kaggle
+!kaggle datasets download ankitbansal06/retail-orders -f orders.csv  
+
+import zipfile
+zip=zipfile.ZipFile('orders.csv.zip')   #provide the loaction where zip file is available
+zip.extractall()
+zip.close()
+
+import os
+os.listdir()   #need to know the file names avaialble at my loaction
+
+import pandas as pd
+df=pd.read_csv('orders.csv')
+df.head()
+
+df['Ship Mode'].unique()
+df=pd.read_csv('orders.csv',na_values=['Not Available','unknown'])
+df['Ship Mode'].unique()
+
+# df.rename(columns={'Order Date':'order_date'})  #this method takes lot of time when we have so many columns
+
+df.columns=df.columns.str.lower()     #we can assign back to their columns name after changing
+df.columns=df.columns.str.replace(' ','_')
+df.columns
+
+
+df['discount']=(df['list_price'] * df['discount_percent'] * 0.01).round(2)   #add new column
+#del df['discount'] is ued to delete any column from dataframe
+df['sale_price']=(df['list_price'] - df['discount']).round(2)
+df['profit']=(df['sale_price'] - df['cost_price']).round(2)
+df.head()
+
+
+df.dtypes
+
+df['order_date']=pd.to_datetime(df['order_date'],format="%Y-%m-%d")
+df.drop(columns=['list_price','cost_price','discount_percent'],inplace=True)
+df.head()
+
+
+!pip install mysql-connector-python
+!pip install SQLAlchemy
+
+import pandas as pd
+from sqlalchemy import create_engine
+import urllib.parse
+
+# Connection details
+db_config = {
+    'user': 'abcde',
+    'password': 'xyz',
+    'host': 'localhost',
+    'database': 'fetch_data'
+}
+
+encoded_password = urllib.parse.quote_plus(db_config['password'])
+# Create SQLAlchemy engine
+engine = create_engine(f"mysql+mysqlconnector://{db_config['user']}:{encoded_password}@{db_config['host']}/{db_config['database']}")
+
+# df.to_sql('df_orders', con=engine, index=False, if_exists='replace')  
+#below code is uncommented so it will not replace the table datatypes
+#this is good practice to insert table manually with datatypes
+#try to create table your own bcz replace take big datatypes that stores more space
+#then use append inplace  of replace
+print("Data inserted successfully")
